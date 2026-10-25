@@ -27,7 +27,7 @@ public final class Prefs {
         c.taper = p.getInt(TAPER, 40) / 100f;
         c.pageWidth = p.getInt(PAGE_WIDTH, 100) / 100f;
         c.coverEffect = p.getBoolean(COVER_EFFECT, false);
-        c.cornerRadius = p.getInt(CORNER_RADIUS, 120);
+        c.cornerRadius = p.getInt(CORNER_RADIUS, 250);
         c.edgeSoftness = p.getInt(EDGE_SOFTNESS, 40);
         // Panels swap at a different angle when closing vs opening. Each panel's effect spans its
         // whole visible range: the inner panel stays on down to the closing switch, the cover

@@ -257,11 +257,22 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
         p.lineTo(bx, by);
         p.lineTo(cx, cy);
         p.lineTo(cd[0], cd[1]);
-        p.quadTo(dx, dy, ad[0], ad[1]);
+        roundCorner(p, cd, dx, dy, ad);
         p.lineTo(da[0], da[1]);
-        p.quadTo(ax, ay, ab[0], ab[1]);
+        roundCorner(p, da, ax, ay, ab);
         p.close();
         return p;
+    }
+
+    /**
+     * Cubic from {@code from} to {@code to} around the corner (cx, cy), close to a circular arc
+     * (control points 0.5523 of the way to the corner) rather than the flatter quadratic.
+     */
+    private static void roundCorner(Path p, float[] from, float cx, float cy, float[] to) {
+        final float k = 0.5523f;
+        p.cubicTo(from[0] + (cx - from[0]) * k, from[1] + (cy - from[1]) * k,
+                to[0] + (cx - to[0]) * k, to[1] + (cy - to[1]) * k,
+                to[0], to[1]);
     }
 
     private static float dist(float x0, float y0, float x1, float y1) {

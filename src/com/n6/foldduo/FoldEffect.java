@@ -23,7 +23,7 @@ public final class FoldEffect {
         /** Inner left page width at full strength, as a fraction of the half-screen (1 = full width). */
         public float pageWidth = 1f;
         /** Radius (px) of the left page's outer corners at full strength. */
-        public float cornerRadius = 120f;
+        public float cornerRadius = 250f;
         /** Feather (px) where the left page meets the black around it, at full strength. */
         public float edgeSoftness = 40f;
     }

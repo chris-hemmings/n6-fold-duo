@@ -80,7 +80,7 @@ public class MainActivity extends Activity {
         check("Angle the left page while folding (needs Shizuku)", Prefs.WARP, true);
         slider("Outer edge shorter by", Prefs.TAPER, 0, 90, 40, "%");
         slider("Left page width (from the middle)", Prefs.PAGE_WIDTH, 30, 100, 100, "%");
-        slider("Corner rounding", Prefs.CORNER_RADIUS, 0, 300, 120, "px");
+        slider("Corner rounding", Prefs.CORNER_RADIUS, 0, 800, 250, "px");
         slider("Edge softness", Prefs.EDGE_SOFTNESS, 0, 150, 40, "px");
 
         heading("Effect");
