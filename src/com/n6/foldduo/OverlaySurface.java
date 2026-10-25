@@ -48,6 +48,11 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
     private final Paint maskPaint = new Paint();
     /** Cuts the page to its rounded trapezoid; a blur mask filter feathers the edge into the black. */
     private final Paint edgePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    /**
+     * Composites the edge-mask layer onto the page with DST_IN. Done as a whole layer, because a
+     * shape drawn with DST_IN only affects the pixels it covers and would leave the corners alone.
+     */
+    private final Paint maskLayerPaint = new Paint();
     private float edgeFeather = -1f;
     private Bitmap recordedPage;
     private boolean recordedCover;
@@ -158,10 +163,12 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
             edgePaint.setMaskFilter(feather >= 0.5f ? new BlurMaskFilter(feather, BlurMaskFilter.Blur.NORMAL) : null);
             edgeFeather = feather;
         }
-        edgePaint.setBlendMode(BlendMode.DST_IN);
+        maskLayerPaint.setBlendMode(BlendMode.DST_IN);
+        int mask = canvas.saveLayer(0, 0, nw / 2f, nh, maskLayerPaint);
         // Extend the shape past the hinge so only the outer edges feather; the hinge side stays
         // flush with the unblurred right half (the clip above cuts it off at the hinge).
         canvas.drawPath(roundedPage(corners, fx.cornerRadius(config, screenCornerRadius()), feather * 3f + 2f), edgePaint);
+        canvas.restoreToCount(mask);
         canvas.restoreToCount(layer);
         canvas.restore();
     }
