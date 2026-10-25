@@ -1,0 +1,12 @@
+# Build output
+build/
+*.apk
+*.apk.idsig
+
+# Downloaded by build.sh / tools/desugar-shizuku.sh
+sdk/
+tools/retrolambda.jar
+
+# Signing keys stay local
+*.keystore
+*.jks

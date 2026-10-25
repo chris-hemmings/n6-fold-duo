@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="service_description">Draws a glass and fade animation over the screen while you fold or unfold the phone, driven by the hinge angle sensor. It does not read screen content.</string>
+</resources>

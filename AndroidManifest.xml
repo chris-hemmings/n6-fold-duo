@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.n6.foldduo"
+    android:versionCode="14"
+    android:versionName="0.6.1">
+    <uses-sdk android:minSdkVersion="31" android:targetSdkVersion="34"/>
+    <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS"/>
+    <uses-permission android:name="moe.shizuku.manager.permission.API_V23"/>
+    <application android:label="N6 Fold Duo" android:theme="@android:style/Theme.DeviceDefault"
+        android:allowBackup="false">
+        <meta-data android:name="moe.shizuku.client.V3_SUPPORT" android:value="true"/>
+        <!-- Shizuku hands its binder to the app through this provider. -->
+        <provider android:name="com.n6.foldduo.ShizukuBinderProvider"
+            android:authorities="com.n6.foldduo.shizuku"
+            android:multiprocess="false" android:enabled="true" android:exported="true"
+            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL"/>
+        <activity android:name=".MainActivity" android:exported="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <service android:name=".FoldService" android:exported="true"
+            android:label="N6 Fold Duo"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService"/>
+            </intent-filter>
+            <meta-data android:name="android.accessibilityservice" android:resource="@xml/accessibility"/>
+        </service>
+    </application>
+</manifest>
