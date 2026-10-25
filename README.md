@@ -29,7 +29,8 @@ Only tested on the Find N6. Other foldables are unlikely to work without changes
 
 ## Install
 
-1. Install the APK (from Releases, or build it below):
+1. Install the APK from [Releases](https://github.com/chris-hemmings/n6-fold-duo/releases), or
+   add this repo to [Obtainium](https://github.com/ImranR98/Obtainium) to get updates:
    ```
    adb install n6-fold-duo.apk
    ```
@@ -54,7 +55,7 @@ Only tested on the Find N6. Other foldables are unlikely to work without changes
 | Angle the left page | on | Perspective left page (needs Shizuku) |
 | Outer edge shorter by | 40% | How much the outer edge shrinks toward the middle |
 | Left page width (from the middle) | 100% | Pulls the outer edge in toward the hinge |
-| Corner rounding | 120 px | Outer corner radius, easing to the screen's own radius when open |
+| Corner rounding | 250 px | Outer corner radius, easing to the screen's own radius when open |
 | Edge softness | 40 px | Feathers the page edge into the black around it (hinge side stays crisp) |
 | Blur | 60 px | Maximum blur, strongest at the outer edge |
 | Hinge shadow / Glass sheen | 60% / 100% | Shading along the hinge and a moving highlight |
@@ -84,6 +85,16 @@ sh build.sh        # writes n6-fold-duo.apk
   Project code uses anonymous classes instead of lambdas for the same reason.
 - `build.sh` creates `debug.keystore` on first run. Keep it: APKs signed with a different key can't
   be installed over the existing app.
+
+### Releases
+
+`.github/workflows/release.yml` builds and publishes a release with `n6-fold-duo.apk` attached.
+Bump `versionCode` and `versionName` in `AndroidManifest.xml`, then either push a tag `v<versionName>`
+or click **Run workflow** on the Actions tab (it tags the commit with `v<versionName>`).
+
+Every release is signed with the same key, stored as the `KEYSTORE_B64` repository secret (the
+base64 of `debug.keystore`, password `android`). Android refuses updates signed with a different
+key, so don't replace it.
 
 `probe/` is the small diagnostic app used to find the hinge sensors and display layout
 (`sh probe/build.sh`).
