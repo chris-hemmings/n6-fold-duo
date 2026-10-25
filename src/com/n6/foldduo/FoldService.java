@@ -71,6 +71,9 @@ public class FoldService extends AccessibilityService implements SensorEventList
     private volatile int events;
     /** Predict at most this far past the last sample; older samples mean the hinge has stopped. */
     private static final long MAX_PREDICT_NS = 40_000_000L;
+    /** Longest gap between frames in the last second, for the readout (stutter shows up here). */
+    private float worstFrameMs, worstFrameShownMs;
+    private long worstFrameWindowNs;
     private final Runnable kickOnMain = new Runnable() {
         @Override public void run() { kick(); }
     };
@@ -155,6 +158,12 @@ public class FoldService extends AccessibilityService implements SensorEventList
         float target = !Float.isNaN(previewAngle) ? previewAngle : predictedAngle();
         float dtMs = lastFrameNs == 0 ? 16f : (nowNs - lastFrameNs) / 1e6f;
         lastFrameNs = nowNs;
+        worstFrameMs = Math.max(worstFrameMs, dtMs);
+        if (nowNs - worstFrameWindowNs > 1_000_000_000L) {
+            worstFrameShownMs = worstFrameMs;
+            worstFrameMs = 0f;
+            worstFrameWindowNs = nowNs;
+        }
         int tau = prefs.getInt(Prefs.SMOOTH_MS, 20);
         if (Float.isNaN(shownAngle) || Float.isNaN(target) || tau <= 0 || !Float.isNaN(previewAngle)) {
             shownAngle = target;
@@ -187,15 +196,17 @@ public class FoldService extends AccessibilityService implements SensorEventList
         if (!capturing) dropPage();
 
         if (view.hud) {
-            view.hudText = String.format("angle %.1f (shown %.1f)%npanel %s  strength %.2f%nblur %dpx%s%nswitch close %.1f / open %.1f%n%s",
-                    rawAngle, shownAngle, cover ? "COVER" : "INNER", view.fx.strength,
+            view.hudText = String.format("angle %.1f (shown %.1f)  %.0f°/s%nslowest frame %.0f ms (8 = smooth 120 Hz)%npanel %s  strength %.2f%nblur %dpx%s%nswitch close %.1f / open %.1f%n%s",
+                    rawAngle, shownAngle, velocity, worstFrameShownMs, cover ? "COVER" : "INNER", view.fx.strength,
                     Math.round(view.fx.blurPx), blurSupported ? "" : " (blur unsupported)",
                     prefs.getFloat(Prefs.CLOSE_SWITCH, Float.NaN), prefs.getFloat(Prefs.OPEN_SWITCH, Float.NaN),
                     capture == null ? "" : capture.status);
         }
         // With a live page the blur is applied to the captured image itself, so the window blur is off.
         // Otherwise round the radius: every change relayouts the blur window, which can stutter.
-        int windowBlur = blurSupported && !capturing ? Math.round(view.fx.blurPx / 4f) * 4 : 0;
+        // Until the first capture arrives (right after the screens switch) the window blur stands
+        // in, so the left half never flashes unwarped and sharp.
+        int windowBlur = blurSupported && (!capturing || view.page == null) ? Math.round(view.fx.blurPx / 4f) * 4 : 0;
         applyBlur(windowBlur, cover, view.rotation);
         view.render();
 

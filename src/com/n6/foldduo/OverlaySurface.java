@@ -54,6 +54,9 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
      */
     private final Paint maskLayerPaint = new Paint();
     private float edgeFeather = -1f;
+    // Reused every frame so drawing doesn't allocate (garbage collection pauses show up as hitches).
+    private final Matrix toScreen = new Matrix(), toNatural = new Matrix(), warp = new Matrix();
+    private final Path pagePath = new Path();
     private Bitmap recordedPage;
     private boolean recordedCover;
     private int recordedSteps = -1;
@@ -69,7 +72,14 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
         text.setShadowLayer(4f, 0f, 0f, Color.BLACK);
     }
 
-    @Override public void surfaceCreated(SurfaceHolder h) { surfaceReady = true; }
+    @Override public void surfaceCreated(SurfaceHolder h) {
+        surfaceReady = true;
+        // Ask for the panel's full refresh rate so the system doesn't drop the overlay to 60 Hz.
+        try {
+            h.getSurface().setFrameRate(120f, Surface.FRAME_RATE_COMPATIBILITY_DEFAULT);
+        } catch (RuntimeException ignored) {
+        }
+    }
     @Override public void surfaceChanged(SurfaceHolder h, int format, int w, int hgt) { surfaceReady = true; }
     @Override public void surfaceDestroyed(SurfaceHolder h) { surfaceReady = false; }
 
@@ -138,12 +148,10 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
     private void drawPage(Canvas canvas, int w, int h) {
         int steps = rotationSteps(rotation);
         float nw = steps % 2 == 0 ? w : h, nh = steps % 2 == 0 ? h : w;
-        Matrix toScreen = naturalToScreen(steps, nw, nh);
-        Matrix toNatural = new Matrix();
+        naturalToScreen(toScreen, steps, nw, nh);
         toScreen.invert(toNatural);
 
         float[] corners = fx.pageCorners(nw / 2f, nh);
-        Matrix warp = new Matrix();
         warp.setPolyToPoly(corners, 0, corners, 8, 4);
 
         canvas.save();
@@ -158,8 +166,9 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
         canvas.concat(toNatural);
         drawRecordedPage(canvas);
         canvas.restore();
-        float feather = config.edgeSoftness * fx.pageAmount;
-        if (Math.abs(feather - edgeFeather) >= 0.5f) {
+        // Rounded to 2 px steps so the blur filter isn't rebuilt on every frame of motion.
+        float feather = Math.round(config.edgeSoftness * fx.pageAmount / 2f) * 2f;
+        if (feather != edgeFeather) {
             edgePaint.setMaskFilter(feather >= 0.5f ? new BlurMaskFilter(feather, BlurMaskFilter.Blur.NORMAL) : null);
             edgeFeather = feather;
         }
@@ -167,7 +176,8 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
         int mask = canvas.saveLayer(0, 0, nw / 2f, nh, maskLayerPaint);
         // Extend the shape past the hinge so only the outer edges feather; the hinge side stays
         // flush with the unblurred right half (the clip above cuts it off at the hinge).
-        canvas.drawPath(roundedPage(corners, fx.cornerRadius(config, screenCornerRadius()), feather * 3f + 2f), edgePaint);
+        roundedPage(pagePath, corners, fx.cornerRadius(config, screenCornerRadius()), feather * 3f + 2f);
+        canvas.drawPath(pagePath, edgePaint);
         canvas.restoreToCount(mask);
         canvas.restoreToCount(layer);
         canvas.restore();
@@ -253,11 +263,11 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
      * outer-bottom D) with its two outer corners, A and D, rounded by radius r. The hinge edge is
      * pushed {@code hingeExtra} further toward the hinge side.
      */
-    private static Path roundedPage(float[] k, float r, float hingeExtra) {
+    private static void roundedPage(Path p, float[] k, float r, float hingeExtra) {
         float ax = k[8], ay = k[9], bx = k[10] + hingeExtra, by = k[11], cx = k[12] + hingeExtra, cy = k[13], dx = k[14], dy = k[15];
         // Keep the rounding within half of each edge it touches.
         r = Math.max(0f, Math.min(r, Math.min(Math.min(dist(ax, ay, bx, by), dist(cx, cy, dx, dy)), dist(dx, dy, ax, ay) / 2f)));
-        Path p = new Path();
+        p.reset();
         float[] ab = toward(ax, ay, bx, by, r), cd = toward(dx, dy, cx, cy, r);
         float[] da = toward(ax, ay, dx, dy, r), ad = toward(dx, dy, ax, ay, r);
         p.moveTo(ab[0], ab[1]);
@@ -268,7 +278,6 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
         p.lineTo(da[0], da[1]);
         roundCorner(p, da, ax, ay, ab);
         p.close();
-        return p;
     }
 
     /**
@@ -294,15 +303,13 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
     }
 
     /** Natural (book-style) coordinates to screen, for each display rotation. */
-    private static Matrix naturalToScreen(int steps, float nw, float nh) {
-        Matrix m = new Matrix();
+    private static void naturalToScreen(Matrix m, int steps, float nw, float nh) {
         switch (steps) {
             case 1: m.setValues(new float[]{0, 1, 0, -1, 0, nw, 0, 0, 1}); break;   // x = Y, y = W - X
             case 2: m.setValues(new float[]{-1, 0, nw, 0, -1, nh, 0, 0, 1}); break; // x = W - X, y = H - Y
             case 3: m.setValues(new float[]{0, -1, nh, 1, 0, 0, 0, 0, 1}); break;   // x = H - Y, y = X
             default: m.reset(); break;
         }
-        return m;
     }
 
     private void drawSheen(Canvas canvas, int w, int h) {
