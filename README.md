@@ -1,3 +1,5 @@
+<img src="docs/icon.png" alt="N6 Fold Duo icon" width="96" align="right">
+
 # N6 Fold Duo
 
 An iPhone Duo-style fold animation for the **OPPO Find N6**.
