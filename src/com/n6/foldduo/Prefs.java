@@ -8,7 +8,7 @@ public final class Prefs {
     public static final String NAME = "foldduo";
     public static final String ENABLED = "enabled", OPEN = "open", CLOSED = "closed",
             BLUR = "blur", SHADOW = "shadow", GLASS = "glass",
-            SMOOTH_MS = "smooth_ms", CAPTURE_SCALE = "capture_scale", WARP = "warp", TAPER = "taper", PAGE_WIDTH = "page_width", COVER_EFFECT = "cover_effect", CORNER_RADIUS = "corner_radius", EDGE_SOFTNESS = "edge_softness", HINGE_BLEND = "hinge_blend", SHADE = "shade", WINDOW = "window", VIEW_DISTANCE = "view_distance", EYE_OFFSET = "eye_offset", WINDOW_STRETCH = "window_stretch", BLUR_CURVE = "blur_curve", SHADE_CURVE = "shade_curve", BLUR_VERTICAL = "blur_vertical", BLUR_FADE = "blur_fade", HOLD_CLEAR_ANGLE = "hold_clear_angle", HOLD_CLEAR_MS = "hold_clear_ms", BLUR_LEFT_ONLY = "blur_left_only", HINGE_RIGHT = "hinge_right", HUD = "hud",
+            SMOOTH_MS = "smooth_ms", CAPTURE_SCALE = "capture_scale", WARP = "warp", TAPER = "taper", PAGE_WIDTH = "page_width", COVER_EFFECT = "cover_effect", CORNER_RADIUS = "corner_radius", EDGE_SOFTNESS = "edge_softness", HINGE_BLEND = "hinge_blend", SHADE = "shade", WINDOW = "window", VIEW_DISTANCE = "view_distance", EYE_OFFSET = "eye_offset", WINDOW_STRETCH = "window_stretch", BLUR_CURVE = "blur_curve", SHADE_CURVE = "shade_curve", BLUR_VERTICAL = "blur_vertical", BLUR_FADE = "blur_fade", HOLD_CLEAR_ANGLE = "hold_clear_angle", HOLD_CLEAR_MS = "hold_clear_ms", BLUR_FADE_OUT_MS = "blur_fade_out_ms", REARM_DEG = "rearm_deg", BLUR_LEFT_ONLY = "blur_left_only", HINGE_RIGHT = "hinge_right", HUD = "hud",
             CLOSE_SWITCH = "close_switch", OPEN_SWITCH = "open_switch";
     /** Used until the real switch angle has been measured. */
     public static final float DEFAULT_SWITCH = 70f;
@@ -28,6 +28,8 @@ public final class Prefs {
                 .putInt(SHADE, 60)
                 .putInt(HOLD_CLEAR_ANGLE, 90)  // held still past halfway, the blur clears...
                 .putInt(HOLD_CLEAR_MS, 500)    // ...after half a second
+                .putInt(BLUR_FADE_OUT_MS, 400)
+                .putInt(REARM_DEG, 6)          // a nudge after stopping doesn't bring it back
                 .putInt(BLUR_CURVE, 100)
                 .putInt(SHADE_CURVE, 130)      // shade deepest near the switch
                 .putInt(BLUR_VERTICAL, 35)     // the blur smears sideways, away from the hinge
@@ -64,6 +66,8 @@ public final class Prefs {
         c.blurFade = p.getInt(BLUR_FADE, 100) / 100f;
         c.holdClearAngle = p.getInt(HOLD_CLEAR_ANGLE, 90);
         c.holdClearMs = p.getInt(HOLD_CLEAR_MS, 500);
+        c.blurFadeOutMs = p.getInt(BLUR_FADE_OUT_MS, 400);
+        c.rearmDeg = p.getInt(REARM_DEG, 6);
         // Panels swap at a different angle when closing vs opening. Each panel's effect spans its
         // whole visible range: the inner panel stays on down to the closing switch, the cover
         // panel stays on up to the opening switch. (Entering a panel the other way, it simply

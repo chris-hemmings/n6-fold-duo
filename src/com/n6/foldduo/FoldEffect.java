@@ -51,9 +51,13 @@ public final class FoldEffect {
         public float blurVertical = 1f;
         /** Fraction of the left page, ending at the hinge, over which the blur fades out (1 = the whole page). */
         public float blurFade = 1f;
-        /** Held still at or above this hinge angle for holdClearMs, the blur clears. */
+        /** Opened and held still at or above this angle for holdClearMs, the blur clears (closing: any angle). */
         public float holdClearAngle = 90f;
         public int holdClearMs = 500;
+        /** How long the blur takes to fade out once held still. */
+        public int blurFadeOutMs = 400;
+        /** Once cleared, how far (degrees) the hinge must move before the blur comes back. */
+        public float rearmDeg = 6f;
         /**
          * 0..1 blur envelope set by the service each frame: on while the hinge moves, off once it
          * has been held still above holdClearAngle. The blur follows movement, not the angle.
