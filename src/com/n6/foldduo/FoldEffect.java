@@ -51,6 +51,8 @@ public final class FoldEffect {
         public float blurVertical = 1f;
         /** Fraction of the left page, ending at the hinge, over which the blur fades out (1 = the whole page). */
         public float blurFade = 1f;
+        /** Inner panel: full blur at or below this hinge angle, fading to none at fully open. */
+        public float fullBlurAngle = 90f;
     }
 
     /** Output for one frame. */
@@ -74,6 +76,13 @@ public final class FoldEffect {
         return t * t * (3f - 2f * t);
     }
 
+    /** Inner panel blur by hinge angle alone: 1 up to fullBlurAngle, 0 at fully open. */
+    public static float blurAmount(float angle, Config c) {
+        if (Float.isNaN(angle)) return 0f;
+        float full = Math.min(c.fullBlurAngle, c.open - 1f);
+        return clamp01((c.open - angle) / (c.open - full));
+    }
+
     /** 0 = no effect, 1 = full effect (at the panel switch). */
     public static float strength(boolean cover, float angle, Config c) {
         if (Float.isNaN(angle)) return 0f;
@@ -90,7 +99,7 @@ public final class FoldEffect {
         float p = strength(cover, angle, c);
         strength = p;
         this.angle = angle;
-        blurPx = c.maxBlurPx * (float) Math.pow(p, c.blurCurve);
+        blurPx = c.maxBlurPx * (float) Math.pow(cover ? p : blurAmount(angle, c), c.blurCurve);
         shadowAlpha = clamp01(c.shadow * p);
         shadowWidth = 0.15f + 0.85f * p;
         sheenAlpha = 0.15f * c.glass * (float) Math.sin(Math.PI * p);
