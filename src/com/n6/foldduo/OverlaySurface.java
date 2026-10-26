@@ -65,6 +65,7 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
     private int recordedSteps = -1;
     private float recordedBlur = -1f;
     private boolean recordedDecal;
+    private float recordedVertical = -1f;
 
     OverlaySurface(Context c) {
         super(c);
@@ -132,6 +133,7 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
     private void draw(Canvas canvas, int w, int h) {
         if (fx.strength > 0f) {
             if (!cover && page != null) drawPage(canvas, w, h);
+            else if (!cover) drawShadeOnly(canvas, w, h);
             else if (cover && page != null) {
                 recordPage();
                 drawRecordedPage(canvas);
@@ -257,11 +259,18 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
         // In window mode the picture has edges inside the panel, so let the blur fade them out
         // (DECAL) rather than smear the edge pixels outward (CLAMP).
         boolean decal = config.window && !cover;
-        if (Math.abs(blur - recordedBlur) >= 0.25f || decal != recordedDecal) {
+        // Horizontal blur along the page (away from the hinge), vertical as a fraction of it: on the
+        // iPhone Duo the blur reads as a sideways smear. Which capture axis runs away from the hinge
+        // depends on the rotation.
+        float along = blur, across = blur * (cover ? 1f : config.blurVertical);
+        boolean sideways = steps % 2 == 0;
+        float bx = sideways ? along : across, by = sideways ? across : along;
+        if (Math.abs(blur - recordedBlur) >= 0.25f || decal != recordedDecal || config.blurVertical != recordedVertical) {
             blurNode.setRenderEffect(blur >= 0.25f
-                    ? RenderEffect.createBlurEffect(blur, blur, decal ? Shader.TileMode.DECAL : Shader.TileMode.CLAMP) : null);
+                    ? RenderEffect.createBlurEffect(bx, Math.max(0.01f, by), decal ? Shader.TileMode.DECAL : Shader.TileMode.CLAMP) : null);
             recordedBlur = blur;
             recordedDecal = decal;
+            recordedVertical = config.blurVertical;
         }
     }
 
@@ -294,6 +303,25 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
         canvas.translate(pageCrop.left, pageCrop.top);
         canvas.scale(pageCrop.width() / (float) page.getWidth(), pageCrop.height() / (float) page.getHeight());
         canvas.drawRenderNode(node);
+        canvas.restore();
+    }
+
+    /**
+     * The left page's shade without a capture yet (the first frames after the inner screen comes
+     * on), so the half isn't briefly bright before the angled page arrives.
+     */
+    private void drawShadeOnly(Canvas canvas, int w, int h) {
+        if (fx.shadeAlpha <= 0.002f) return;
+        int steps = rotationSteps(rotation);
+        float nw = steps % 2 == 0 ? w : h, nh = steps % 2 == 0 ? h : w;
+        naturalToScreen(toScreen, steps, nw, nh);
+        canvas.save();
+        canvas.concat(toScreen);
+        int dark = Color.argb(Math.round(255 * fx.shadeAlpha), 0, 0, 0);
+        shadePaint.setShader(new LinearGradient(0, 0, nw / 2f, 0,
+                new int[]{dark, Color.argb(Math.round(255 * fx.shadeAlpha * 0.55f), 0, 0, 0), Color.TRANSPARENT},
+                new float[]{0f, 0.55f, 1f}, Shader.TileMode.CLAMP));
+        canvas.drawRect(0, 0, nw / 2f, nh, shadePaint);
         canvas.restore();
     }
 

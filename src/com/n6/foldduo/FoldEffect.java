@@ -42,6 +42,13 @@ public final class FoldEffect {
          * the height tapers). Full stretch only looks right from exactly the assumed eye position.
          */
         public float windowStretch = 0f;
+        /**
+         * How the blur and the shade build up over the effect (exponent on its strength): below 1
+         * comes in early and stays heavy, above 1 holds off until near the switch.
+         */
+        public float blurCurve = 1.5f, shadeCurve = 1f;
+        /** Vertical blur as a fraction of the horizontal: below 1 smears the page sideways. */
+        public float blurVertical = 1f;
     }
 
     /** Output for one frame. */
@@ -81,7 +88,7 @@ public final class FoldEffect {
         float p = strength(cover, angle, c);
         strength = p;
         this.angle = angle;
-        blurPx = c.maxBlurPx * (float) Math.pow(p, 1.5);
+        blurPx = c.maxBlurPx * (float) Math.pow(p, c.blurCurve);
         shadowAlpha = clamp01(c.shadow * p);
         shadowWidth = 0.15f + 0.85f * p;
         sheenAlpha = 0.15f * c.glass * (float) Math.sin(Math.PI * p);
@@ -89,7 +96,7 @@ public final class FoldEffect {
         pageTaper = c.taper * p;
         pageWidthFrac = 1f - (1f - c.pageWidth) * p;
         pageAmount = p;
-        shadeAlpha = clamp01(c.shade * p);
+        shadeAlpha = clamp01(c.shade * (float) Math.pow(p, c.shadeCurve));
         return this;
     }
 

@@ -76,6 +76,8 @@ right from exactly the assumed eye position.
 | Edge softness | 40 px | Feathers the page edge into the black around it; the hinge side stays crisp |
 | Blur past the hinge | 0% | Carries the blur this far into the right half (% of screen width), so there's no line at the fold |
 | Left page shade | 0% | Darkens the left page, most at its outer edge |
+| Blur / Shade build-up | 150% / 100% | Lower comes in early and stays heavy; higher holds off until near the switch |
+| Vertical blur | 100% | Lower smears the blur sideways, away from the hinge |
 | Window projection | off | Left page as a window onto the flat screen (replaces the trapezoid) |
 | Viewing distance | 35 cm | Closer makes the projection stronger |
 | Sideways stretch / Eye position | 0% / 50% | Optional sideways part of the projection, and where it assumes your eye is |
@@ -104,9 +106,11 @@ right from exactly the assumed eye position.
   about 50 Hz, 0° closed to about 180° open) that any app can read. Readings arrive on their own
   thread, and each frame predicts the current angle from how fast the hinge is moving.
 - **Displays**: logical display 0 is always the lit screen (inner when open, cover when closed), so
-  one overlay on display 0 follows the active screen. The app records the hinge angles where
-  ColorOS switches screens (they differ when opening and closing) and ends each screen's effect
-  there.
+  one overlay on display 0 follows the active screen. When opening, ColorOS turns the cover off
+  almost immediately but lights the inner screen about a second later, at whatever angle the hinge
+  has reached. Each opening therefore runs the effect from full strength at the angle where the
+  inner screen actually came on, down to none at fully open. When closing, it uses the learned
+  angle where ColorOS switches to the cover.
 - **Overlay**: an accessibility-service overlay (`TYPE_ACCESSIBILITY_OVERLAY`). Everything is drawn
   into one `SurfaceView`.
 - **Live left page**: a Shizuku user service (`ShellService`) runs as the shell user and captures

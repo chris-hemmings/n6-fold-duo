@@ -107,6 +107,9 @@ public class MainActivity extends Activity {
         check("Animation enabled", Prefs.ENABLED, true);
         check("Also animate the outer (cover) screen", Prefs.COVER_EFFECT, false);
         slider("Blur", Prefs.BLUR, 0, 150, 60, "px");
+        slider("Blur build-up (lower = heavy sooner)", Prefs.BLUR_CURVE, 20, 300, 150, "%");
+        slider("Vertical blur (lower = sideways smear)", Prefs.BLUR_VERTICAL, 5, 100, 100, "%");
+        slider("Shade build-up (higher = only near the switch)", Prefs.SHADE_CURVE, 20, 300, 100, "%");
         check("Blur only the left half of the inner screen", Prefs.BLUR_LEFT_ONLY, true);
         slider("Hinge shadow", Prefs.SHADOW, 0, 100, 60, "%");
         slider("Glass sheen", Prefs.GLASS, 0, 200, 100, "%");

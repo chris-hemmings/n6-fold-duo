@@ -74,6 +74,14 @@ public class FoldService extends AccessibilityService implements SensorEventList
     /** Longest gap between frames in the last second, for the readout (stutter shows up here). */
     private float worstFrameMs, worstFrameShownMs;
     private long worstFrameWindowNs;
+    /**
+     * Angle at which the inner panel actually lit up on this opening (NaN outside one). ColorOS
+     * turns the inner panel on about a second after the cover goes off, at whatever angle the
+     * hinge has reached, so each opening runs the effect from full strength there to none at
+     * fully open. Closing uses the learned switch angle instead.
+     */
+    private float openingStart = Float.NaN;
+    private boolean awaitingInnerOn;
     private final Runnable kickOnMain = new Runnable() {
         @Override public void run() { kick(); }
     };
@@ -174,6 +182,18 @@ public class FoldService extends AccessibilityService implements SensorEventList
 
         boolean cover = isCover();
         boolean enabled = prefs.getBoolean(Prefs.ENABLED, true) || !Float.isNaN(previewAngle);
+        if (awaitingInnerOn && !cover) {
+            Display d0 = displays.getDisplay(Display.DEFAULT_DISPLAY);
+            if (d0 != null && d0.getState() == Display.STATE_ON && !Float.isNaN(shownAngle)) {
+                // Leave some range to fade over even if it lit up late on a fast open.
+                openingStart = Math.min(shownAngle, config.open - 20f);
+                awaitingInnerOn = false;
+                Log.i(TAG, "inner panel on at angle " + shownAngle);
+            }
+        }
+        if (cover || (!Float.isNaN(shownAngle) && shownAngle >= config.open)) openingStart = Float.NaN;
+        config.innerSwitch = Float.isNaN(previewAngle) && !Float.isNaN(openingStart)
+                ? openingStart : prefs.getFloat(Prefs.CLOSE_SWITCH, Prefs.DEFAULT_SWITCH);
         view.fx.compute(cover, enabled ? shownAngle : Float.NaN, config);
         view.config = config;
         if (view.fx.strength > 0f && nowNs - lastLogNs > 100_000_000L) {
@@ -323,6 +343,7 @@ public class FoldService extends AccessibilityService implements SensorEventList
                 prefs.edit().putFloat(cover ? Prefs.CLOSE_SWITCH : Prefs.OPEN_SWITCH, rawAngle).apply();
             }
             Log.i(TAG, "panel switch -> " + (cover ? "cover" : "inner") + " at angle " + rawAngle);
+            awaitingInnerOn = !cover;
             lastCover = cover;
         }
         kick();
