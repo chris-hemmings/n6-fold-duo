@@ -58,13 +58,14 @@ captures only the left half of the inner screen while you're folding, to draw th
 Every setting is adjustable in the app. Drag the **Preview** slider to see the effect at any angle
 without folding.
 
-**Match iPhone Duo** sets the look seen on the iPhone Duo. The left panel acts as a window you open
-onto the flat screen behind it. From the real hinge angle, your viewing distance and your eye's
-position, it works out how the flat picture would look through the tilted panel. The picture gets
-shorter toward the outer edge as the panel tilts. **Sideways stretch** (off by default) adds the
-full sideways projection, which only looks right from exactly the assumed eye position. The left
-half is also heavily blurred, the blur carries on about 7% past the hinge, and the left half darkens toward
+**Match iPhone Duo** sets the look seen on the iPhone Duo. The left half's content isn't warped on
+screen, since the panel's own tilt provides the perspective. It's heavily blurred, the blur carries on about 7% past the hinge, and the left half darkens toward
 its outer edge. The default look instead angles the left page into a fixed rounded trapezoid.
+
+**Window projection** (off unless you turn it on) is an experimental alternative. It treats the left
+panel as a window onto the flat screen behind it, so the picture gets shorter toward the outer edge
+as the panel tilts. **Sideways stretch** adds the sideways part of that projection, which only looks
+right from exactly the assumed eye position.
 
 | Setting | Default | What it does |
 | --- | --- | --- |

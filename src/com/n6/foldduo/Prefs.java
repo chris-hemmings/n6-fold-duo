@@ -13,12 +13,11 @@ public final class Prefs {
     /** Used until the real switch angle has been measured. */
     public static final float DEFAULT_SWITCH = 70f;
 
-    /** The iPhone Duo look: window projection, blur running past the hinge, a darkened left page. */
+    /** The iPhone Duo look: no on-screen warp, blur running past the hinge, a darkened left page. */
     public static void applyIphoneDuo(SharedPreferences p) {
         p.edit()
                 .putBoolean(WARP, true)        // still needs the live capture for the blur gradient
-                .putBoolean(WINDOW, true)      // the left page is a window onto the flat screen
-                .putInt(WINDOW_STRETCH, 0)
+                .putBoolean(WINDOW, false)     // the panel's own tilt provides the perspective
                 .putInt(TAPER, 0)
                 .putInt(PAGE_WIDTH, 100)
                 .putInt(CORNER_RADIUS, 0)

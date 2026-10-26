@@ -82,7 +82,7 @@ public class MainActivity extends Activity {
             @Override public void onClick(View v) {
                 Prefs.applyIphoneDuo(prefs);
                 build();
-                toast("iPhone Duo look applied: window projection with a blurred, shaded left page.");
+                toast("iPhone Duo look applied: blurred, shaded left page with no on-screen warp.");
             }
         });
 
