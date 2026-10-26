@@ -26,6 +26,10 @@ public final class FoldEffect {
         public float cornerRadius = 250f;
         /** Feather (px) where the left page meets the black around it, at full strength. */
         public float edgeSoftness = 40f;
+        /** How far the left page's blur carries on past the hinge, as a fraction of the inner screen's width. */
+        public float hingeBlend = 0f;
+        /** Darkening of the left page at full strength: this much black at its outer edge, none at the hinge. */
+        public float shade = 0f;
     }
 
     /** Output for one frame. */
@@ -36,6 +40,8 @@ public final class FoldEffect {
     public float pageWidthFrac = 1f;
     /** Strength 0..1 used to ease the corner radius from the screen's own radius to the setting. */
     public float pageAmount;
+    /** Left page shade for this frame (0..1 black at the outer edge). */
+    public float shadeAlpha;
 
     public static float clamp01(float v) { return v < 0f ? 0f : (v > 1f ? 1f : v); }
 
@@ -68,6 +74,7 @@ public final class FoldEffect {
         pageTaper = c.taper * p;
         pageWidthFrac = 1f - (1f - c.pageWidth) * p;
         pageAmount = p;
+        shadeAlpha = clamp01(c.shade * p);
         return this;
     }
 

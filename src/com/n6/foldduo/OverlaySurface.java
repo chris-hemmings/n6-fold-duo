@@ -45,6 +45,8 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
     /** Composite of the sharp page and, on top, the blurred page masked by a gradient. */
     private final RenderNode pageNode = new RenderNode("page");
     private final RenderNode blurNode = new RenderNode("pageBlur");
+    /** The blurred copy faded out toward (and past) the hinge; also drawn alone in the strip past it. */
+    private final RenderNode fadedBlurNode = new RenderNode("pageBlurFaded");
     private final Paint maskPaint = new Paint();
     /** Cuts the page to its rounded trapezoid; a blur mask filter feathers the edge into the black. */
     private final Paint edgePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -53,6 +55,7 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
      * shape drawn with DST_IN only affects the pixels it covers and would leave the corners alone.
      */
     private final Paint maskLayerPaint = new Paint();
+    private final Paint shadePaint = new Paint();
     private float edgeFeather = -1f;
     // Reused every frame so drawing doesn't allocate (garbage collection pauses show up as hitches).
     private final Matrix toScreen = new Matrix(), toNatural = new Matrix(), warp = new Matrix();
@@ -93,13 +96,16 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
     }
 
     /** Screen region the capture should cover: the moving page on the inner panel, everything on the cover. */
-    static Rect captureRegion(boolean cover, int rotation, int w, int h) {
+    static Rect captureRegion(boolean cover, int rotation, int w, int h, float hingeBlend) {
         if (cover) return new Rect(0, 0, w, h);
-        switch (rotationSteps(rotation)) {
-            case 1: return new Rect(0, h / 2, w, h);
-            case 2: return new Rect(w / 2, 0, w, h);
-            case 3: return new Rect(0, 0, w, h / 2);
-            default: return new Rect(0, 0, w / 2, h);
+        // The moving page, plus the strip past the hinge the blur carries on into.
+        int steps = rotationSteps(rotation);
+        int blend = Math.round(hingeBlend * (steps % 2 == 0 ? w : h));
+        switch (steps) {
+            case 1: return new Rect(0, Math.max(0, h / 2 - blend), w, h);
+            case 2: return new Rect(Math.max(0, w / 2 - blend), 0, w, h);
+            case 3: return new Rect(0, 0, w, Math.min(h, h / 2 + blend));
+            default: return new Rect(0, 0, Math.min(w, w / 2 + blend), h);
         }
     }
 
@@ -166,6 +172,13 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
         canvas.concat(toNatural);
         drawRecordedPage(canvas);
         canvas.restore();
+        if (fx.shadeAlpha > 0.002f) {
+            int dark = Color.argb(Math.round(255 * fx.shadeAlpha), 0, 0, 0);
+            shadePaint.setShader(new LinearGradient(0, 0, nw / 2f, 0,
+                    new int[]{dark, Color.argb(Math.round(255 * fx.shadeAlpha * 0.55f), 0, 0, 0), Color.TRANSPARENT},
+                    new float[]{0f, 0.55f, 1f}, Shader.TileMode.CLAMP));
+            canvas.drawRect(0, 0, nw / 2f, nh, shadePaint);
+        }
         // Rounded to 2 px steps so the blur filter isn't rebuilt on every frame of motion.
         float feather = Math.round(config.edgeSoftness * fx.pageAmount / 2f) * 2f;
         if (feather != edgeFeather) {
@@ -181,6 +194,19 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
         canvas.restoreToCount(mask);
         canvas.restoreToCount(layer);
         canvas.restore();
+
+        // Past the hinge: only the faded blur, unwarped, over the live right half, so the blur
+        // fades out a little way past the hinge instead of stopping in a line there. Its mask
+        // reaches zero at the far edge of this strip.
+        float strip = config.hingeBlend * nw;
+        if (strip >= 1f) {
+            canvas.save();
+            canvas.concat(toScreen);
+            canvas.clipRect(nw / 2f, 0, nw / 2f + strip, nh);
+            canvas.concat(toNatural);
+            drawRecorded(canvas, fadedBlurNode);
+            canvas.restore();
+        }
     }
 
     /**
@@ -199,18 +225,23 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
             b.drawBitmap(page, 0, 0, bitmapPaint);
             blurNode.endRecording();
 
+            fadedBlurNode.setPosition(0, 0, bw, bh);
+            Canvas f = fadedBlurNode.beginRecording(bw, bh);
+            int layer = f.saveLayer(0, 0, bw, bh, null);
+            f.drawRenderNode(blurNode);
+            maskPaint.setShader(hingeFade(steps, bw, bh));
+            maskPaint.setBlendMode(BlendMode.DST_IN);
+            f.drawRect(0, 0, bw, bh, maskPaint);
+            f.restoreToCount(layer);
+            fadedBlurNode.endRecording();
+
             pageNode.setPosition(0, 0, bw, bh);
             Canvas c = pageNode.beginRecording(bw, bh);
             if (cover) {
                 c.drawRenderNode(blurNode);
             } else {
                 c.drawBitmap(page, 0, 0, bitmapPaint);
-                int layer = c.saveLayer(0, 0, bw, bh, null);
-                c.drawRenderNode(blurNode);
-                maskPaint.setShader(hingeFade(steps, bw, bh));
-                maskPaint.setBlendMode(BlendMode.DST_IN);
-                c.drawRect(0, 0, bw, bh, maskPaint);
-                c.restoreToCount(layer);
+                c.drawRenderNode(fadedBlurNode);
             }
             pageNode.endRecording();
             recordedPage = page;
@@ -245,10 +276,15 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
 
     /** Draw the recorded page back over the screen region it was captured from. */
     private void drawRecordedPage(Canvas canvas) {
+        drawRecorded(canvas, pageNode);
+    }
+
+    /** Draw a recorded node (in capture coordinates) back over the screen region it came from. */
+    private void drawRecorded(Canvas canvas, RenderNode node) {
         canvas.save();
         canvas.translate(pageCrop.left, pageCrop.top);
         canvas.scale(pageCrop.width() / (float) page.getWidth(), pageCrop.height() / (float) page.getHeight());
-        canvas.drawRenderNode(pageNode);
+        canvas.drawRenderNode(node);
         canvas.restore();
     }
 

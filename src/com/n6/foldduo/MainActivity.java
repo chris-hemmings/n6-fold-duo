@@ -76,12 +76,24 @@ public class MainActivity extends Activity {
             }
         });
 
+        heading("Look");
+        Button duo = button("Match iPhone Duo");
+        duo.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                Prefs.applyIphoneDuo(prefs);
+                build();
+                toast("iPhone Duo look applied: blurred, shaded left page with no on-screen warp.");
+            }
+        });
+
         heading("Left page fold");
         check("Angle the left page while folding (needs Shizuku)", Prefs.WARP, true);
         slider("Outer edge shorter by", Prefs.TAPER, 0, 90, 40, "%");
         slider("Left page width (from the middle)", Prefs.PAGE_WIDTH, 30, 100, 100, "%");
         slider("Corner rounding", Prefs.CORNER_RADIUS, 0, 800, 250, "px");
         slider("Edge softness", Prefs.EDGE_SOFTNESS, 0, 150, 40, "px");
+        slider("Blur past the hinge", Prefs.HINGE_BLEND, 0, 15, 0, "% of width");
+        slider("Left page shade (darkens toward the outer edge)", Prefs.SHADE, 0, 100, 0, "%");
 
         heading("Effect");
         check("Animation enabled", Prefs.ENABLED, true);

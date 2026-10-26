@@ -190,7 +190,7 @@ public class FoldService extends AccessibilityService implements SensorEventList
         // Live capture: the left page on the inner panel (to angle it), the whole cover screen (to blur it).
         boolean warp = prefs.getBoolean(Prefs.WARP, true);
         boolean capturing = (warp || cover) && view.wantsPage() && view.ready() && capture != null && capture.ready();
-        Rect region = OverlaySurface.captureRegion(cover, view.rotation, view.getWidth(), view.getHeight());
+        Rect region = OverlaySurface.captureRegion(cover, view.rotation, view.getWidth(), view.getHeight(), config.hingeBlend);
         if (capture != null) capture.setActive(capturing, view.ready() ? view.getSurfaceControl() : null, region,
                 prefs.getInt(Prefs.CAPTURE_SCALE, 40) / 100f);
         if (!capturing) dropPage();
