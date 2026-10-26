@@ -58,10 +58,12 @@ captures only the left half of the inner screen while you're folding, to draw th
 Every setting is adjustable in the app. Drag the **Preview** slider to see the effect at any angle
 without folding.
 
-**Match iPhone Duo** sets the look seen on the iPhone Duo. The left half's content isn't warped on
-screen, since the panel's own tilt provides the perspective. Instead it's heavily blurred, the blur
-carries on about 7% past the hinge, and the left half darkens toward its outer edge. The default
-look instead angles the left page into a rounded trapezoid.
+**Match iPhone Duo** sets the look seen on the iPhone Duo. The left panel acts as a window you open
+onto the flat screen behind it. From the real hinge angle, your viewing distance and your eye's
+position, it shows the part of the flat picture you'd see through the tilted panel. Near the hinge
+it's stretched, toward the outer edge it's shorter, and past the picture's edge it's dark. It's
+also heavily blurred, the blur carries on about 7% past the hinge, and the left half darkens toward
+its outer edge. The default look instead angles the left page into a fixed rounded trapezoid.
 
 | Setting | Default | What it does |
 | --- | --- | --- |
@@ -72,6 +74,8 @@ look instead angles the left page into a rounded trapezoid.
 | Edge softness | 40 px | Feathers the page edge into the black around it; the hinge side stays crisp |
 | Blur past the hinge | 0% | Carries the blur this far into the right half (% of screen width), so there's no line at the fold |
 | Left page shade | 0% | Darkens the left page, most at its outer edge |
+| Window projection | off | Left page as a window onto the flat screen (replaces the trapezoid) |
+| Viewing distance / Eye position | 35 cm / 50% | Where the projection assumes your eye is |
 | Blur | 60 px | Maximum blur, strongest at the outer edge |
 | Blur only the left half | on | Used when Shizuku isn't connected |
 | Hinge shadow / Glass sheen | 60% / 100% | Shading along the hinge, and a moving highlight |

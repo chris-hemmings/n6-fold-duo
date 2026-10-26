@@ -30,6 +30,13 @@ public final class FoldEffect {
         public float hingeBlend = 0f;
         /** Darkening of the left page at full strength: this much black at its outer edge, none at the hinge. */
         public float shade = 0f;
+        /**
+         * Window projection: instead of a fixed trapezoid, show the left page as a window onto the
+         * flat screen behind it, from an eye viewDistanceCm away and eyeOffset (fraction of the
+         * page width) to the right of the hinge. Uses the real hinge angle.
+         */
+        public boolean window = false;
+        public float viewDistanceCm = 35f, eyeOffset = 0.5f;
     }
 
     /** Output for one frame. */
@@ -42,6 +49,8 @@ public final class FoldEffect {
     public float pageAmount;
     /** Left page shade for this frame (0..1 black at the outer edge). */
     public float shadeAlpha;
+    /** Hinge angle this frame was computed for (degrees; NaN when unknown). */
+    public float angle = Float.NaN;
 
     public static float clamp01(float v) { return v < 0f ? 0f : (v > 1f ? 1f : v); }
 
@@ -66,6 +75,7 @@ public final class FoldEffect {
     public FoldEffect compute(boolean cover, float angle, Config c) {
         float p = strength(cover, angle, c);
         strength = p;
+        this.angle = angle;
         blurPx = c.maxBlurPx * (float) Math.pow(p, 1.5);
         shadowAlpha = clamp01(c.shadow * p);
         shadowWidth = 0.15f + 0.85f * p;
@@ -76,6 +86,33 @@ public final class FoldEffect {
         pageAmount = p;
         shadeAlpha = clamp01(c.shade * p);
         return this;
+    }
+
+    /**
+     * Window projection, as {flat corners..., panel corners...} for setPolyToPoly (flat -> panel),
+     * in natural coordinates (hinge is the vertical line x = hingeX, page is x < hingeX, height h).
+     *
+     * The left panel is tilted toward the viewer by f = 180 - angle. A point on it u px from the
+     * hinge, seen from an eye D px in front of the flat screen and e px to the right of the hinge,
+     * lines up with the flat-screen point X(u) = (u cos f + e) / t - e, t = 1 - u sin f / D, and
+     * heights there are scaled by t around the eye's height. Seeing one plane through another from
+     * a point is a homography, so the four page corners pin it down exactly. Toward fully open the
+     * result eases to flat so the effect can end without a jump.
+     */
+    public static float[] windowCorners(float hingeX, float h, float angleDeg, float distPx, float eyeOffset, float amount) {
+        float u = hingeX, ye = h / 2f, e = eyeOffset * hingeX;
+        // Past perpendicular the panel faces away from the viewer and the projection degenerates;
+        // hold it at the perpendicular view (by then the page is mostly blur and shade anyway).
+        double f = Math.toRadians(Math.max(0f, Math.min(88f, 180f - angleDeg)));
+        float t = (float) (1 - u * Math.sin(f) / distPx);
+        float x = (float) ((u * Math.cos(f) + e) / t - e);
+        float k = clamp01(amount);
+        // Flat-screen points seen at the panel's outer corners, eased toward the flat page.
+        float outerX = hingeX - (u + (x - u) * k);
+        float top = ye - ye / (1f + (t - 1f) * k), bottom = ye + (h - ye) / (1f + (t - 1f) * k);
+        return new float[]{
+                outerX, top, hingeX, 0f, hingeX, h, outerX, bottom,
+                0f, 0f, hingeX, 0f, hingeX, h, 0f, h};
     }
 
     /** Outer corner radius: the screen's own corner radius when open, the setting at full strength. */

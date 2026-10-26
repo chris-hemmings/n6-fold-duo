@@ -82,9 +82,16 @@ public class MainActivity extends Activity {
             @Override public void onClick(View v) {
                 Prefs.applyIphoneDuo(prefs);
                 build();
-                toast("iPhone Duo look applied: blurred, shaded left page with no on-screen warp.");
+                toast("iPhone Duo look applied: window projection with a blurred, shaded left page.");
             }
         });
+
+        heading("Window projection");
+        text("Shows the left page as a window you open onto the flat screen behind it, using the real "
+                + "hinge angle. Replaces the trapezoid and width settings below while on.");
+        check("Window projection", Prefs.WINDOW, false);
+        slider("Viewing distance", Prefs.VIEW_DISTANCE, 15, 80, 35, " cm");
+        slider("Eye position right of the hinge", Prefs.EYE_OFFSET, 0, 100, 50, "% of page width");
 
         heading("Left page fold");
         check("Angle the left page while folding (needs Shizuku)", Prefs.WARP, true);

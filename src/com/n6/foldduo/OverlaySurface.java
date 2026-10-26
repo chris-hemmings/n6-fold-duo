@@ -64,6 +64,7 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
     private boolean recordedCover;
     private int recordedSteps = -1;
     private float recordedBlur = -1f;
+    private boolean recordedDecal;
 
     OverlaySurface(Context c) {
         super(c);
@@ -157,7 +158,10 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
         naturalToScreen(toScreen, steps, nw, nh);
         toScreen.invert(toNatural);
 
-        float[] corners = fx.pageCorners(nw / 2f, nh);
+        float[] corners = config.window
+                ? FoldEffect.windowCorners(nw / 2f, nh, fx.angle, config.viewDistanceCm * pxPerCm(),
+                        config.eyeOffset, Math.min(1f, fx.pageAmount * 4f))
+                : fx.pageCorners(nw / 2f, nh);
         warp.setPolyToPoly(corners, 0, corners, 8, 4);
 
         canvas.save();
@@ -250,9 +254,14 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
             recordedBlur = -1f;
         }
         float blur = Math.max(0f, fx.blurPx) * bw / (float) Math.max(1, pageCrop.width());
-        if (Math.abs(blur - recordedBlur) >= 0.25f) {
-            blurNode.setRenderEffect(blur >= 0.25f ? RenderEffect.createBlurEffect(blur, blur, Shader.TileMode.CLAMP) : null);
+        // In window mode the picture has edges inside the panel, so let the blur fade them out
+        // (DECAL) rather than smear the edge pixels outward (CLAMP).
+        boolean decal = config.window && !cover;
+        if (Math.abs(blur - recordedBlur) >= 0.25f || decal != recordedDecal) {
+            blurNode.setRenderEffect(blur >= 0.25f
+                    ? RenderEffect.createBlurEffect(blur, blur, decal ? Shader.TileMode.DECAL : Shader.TileMode.CLAMP) : null);
             recordedBlur = blur;
+            recordedDecal = decal;
         }
     }
 
@@ -286,6 +295,10 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
         canvas.scale(pageCrop.width() / (float) page.getWidth(), pageCrop.height() / (float) page.getHeight());
         canvas.drawRenderNode(node);
         canvas.restore();
+    }
+
+    private float pxPerCm() {
+        return getResources().getDisplayMetrics().xdpi / 2.54f;
     }
 
     private float screenCornerRadius() {
