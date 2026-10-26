@@ -160,7 +160,7 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
 
         float[] corners = config.window
                 ? FoldEffect.windowCorners(nw / 2f, nh, fx.angle, config.viewDistanceCm * pxPerCm(),
-                        config.eyeOffset, Math.min(1f, fx.pageAmount * 4f))
+                        config.eyeOffset, config.windowStretch, Math.min(1f, fx.pageAmount * 4f))
                 : fx.pageCorners(nw / 2f, nh);
         warp.setPolyToPoly(corners, 0, corners, 8, 4);
 

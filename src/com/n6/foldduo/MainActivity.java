@@ -91,7 +91,8 @@ public class MainActivity extends Activity {
                 + "hinge angle. Replaces the trapezoid and width settings below while on.");
         check("Window projection", Prefs.WINDOW, false);
         slider("Viewing distance", Prefs.VIEW_DISTANCE, 15, 80, 35, " cm");
-        slider("Eye position right of the hinge", Prefs.EYE_OFFSET, 0, 100, 50, "% of page width");
+        slider("Sideways stretch", Prefs.WINDOW_STRETCH, 0, 100, 0, "%");
+        slider("Eye position right of the hinge (affects stretch)", Prefs.EYE_OFFSET, 0, 100, 50, "% of page width");
 
         heading("Left page fold");
         check("Angle the left page while folding (needs Shizuku)", Prefs.WARP, true);

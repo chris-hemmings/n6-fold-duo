@@ -60,9 +60,10 @@ without folding.
 
 **Match iPhone Duo** sets the look seen on the iPhone Duo. The left panel acts as a window you open
 onto the flat screen behind it. From the real hinge angle, your viewing distance and your eye's
-position, it shows the part of the flat picture you'd see through the tilted panel. Near the hinge
-it's stretched, toward the outer edge it's shorter, and past the picture's edge it's dark. It's
-also heavily blurred, the blur carries on about 7% past the hinge, and the left half darkens toward
+position, it works out how the flat picture would look through the tilted panel. The picture gets
+shorter toward the outer edge as the panel tilts. **Sideways stretch** (off by default) adds the
+full sideways projection, which only looks right from exactly the assumed eye position. The left
+half is also heavily blurred, the blur carries on about 7% past the hinge, and the left half darkens toward
 its outer edge. The default look instead angles the left page into a fixed rounded trapezoid.
 
 | Setting | Default | What it does |
@@ -75,7 +76,8 @@ its outer edge. The default look instead angles the left page into a fixed round
 | Blur past the hinge | 0% | Carries the blur this far into the right half (% of screen width), so there's no line at the fold |
 | Left page shade | 0% | Darkens the left page, most at its outer edge |
 | Window projection | off | Left page as a window onto the flat screen (replaces the trapezoid) |
-| Viewing distance / Eye position | 35 cm / 50% | Where the projection assumes your eye is |
+| Viewing distance | 35 cm | Closer makes the projection stronger |
+| Sideways stretch / Eye position | 0% / 50% | Optional sideways part of the projection, and where it assumes your eye is |
 | Blur | 60 px | Maximum blur, strongest at the outer edge |
 | Blur only the left half | on | Used when Shizuku isn't connected |
 | Hinge shadow / Glass sheen | 60% / 100% | Shading along the hinge, and a moving highlight |

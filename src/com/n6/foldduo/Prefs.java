@@ -8,7 +8,7 @@ public final class Prefs {
     public static final String NAME = "foldduo";
     public static final String ENABLED = "enabled", OPEN = "open", CLOSED = "closed",
             BLUR = "blur", SHADOW = "shadow", GLASS = "glass",
-            SMOOTH_MS = "smooth_ms", CAPTURE_SCALE = "capture_scale", WARP = "warp", TAPER = "taper", PAGE_WIDTH = "page_width", COVER_EFFECT = "cover_effect", CORNER_RADIUS = "corner_radius", EDGE_SOFTNESS = "edge_softness", HINGE_BLEND = "hinge_blend", SHADE = "shade", WINDOW = "window", VIEW_DISTANCE = "view_distance", EYE_OFFSET = "eye_offset", BLUR_LEFT_ONLY = "blur_left_only", HINGE_RIGHT = "hinge_right", HUD = "hud",
+            SMOOTH_MS = "smooth_ms", CAPTURE_SCALE = "capture_scale", WARP = "warp", TAPER = "taper", PAGE_WIDTH = "page_width", COVER_EFFECT = "cover_effect", CORNER_RADIUS = "corner_radius", EDGE_SOFTNESS = "edge_softness", HINGE_BLEND = "hinge_blend", SHADE = "shade", WINDOW = "window", VIEW_DISTANCE = "view_distance", EYE_OFFSET = "eye_offset", WINDOW_STRETCH = "window_stretch", BLUR_LEFT_ONLY = "blur_left_only", HINGE_RIGHT = "hinge_right", HUD = "hud",
             CLOSE_SWITCH = "close_switch", OPEN_SWITCH = "open_switch";
     /** Used until the real switch angle has been measured. */
     public static final float DEFAULT_SWITCH = 70f;
@@ -18,6 +18,7 @@ public final class Prefs {
         p.edit()
                 .putBoolean(WARP, true)        // still needs the live capture for the blur gradient
                 .putBoolean(WINDOW, true)      // the left page is a window onto the flat screen
+                .putInt(WINDOW_STRETCH, 0)
                 .putInt(TAPER, 0)
                 .putInt(PAGE_WIDTH, 100)
                 .putInt(CORNER_RADIUS, 0)
@@ -51,6 +52,7 @@ public final class Prefs {
         c.window = p.getBoolean(WINDOW, false);
         c.viewDistanceCm = p.getInt(VIEW_DISTANCE, 35);
         c.eyeOffset = p.getInt(EYE_OFFSET, 50) / 100f;
+        c.windowStretch = p.getInt(WINDOW_STRETCH, 0) / 100f;
         // Panels swap at a different angle when closing vs opening. Each panel's effect spans its
         // whole visible range: the inner panel stays on down to the closing switch, the cover
         // panel stays on up to the opening switch. (Entering a panel the other way, it simply

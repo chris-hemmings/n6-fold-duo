@@ -37,6 +37,11 @@ public final class FoldEffect {
          */
         public boolean window = false;
         public float viewDistanceCm = 35f, eyeOffset = 0.5f;
+        /**
+         * How much of the projection's sideways stretch to keep (0 = picture keeps its width, only
+         * the height tapers). Full stretch only looks right from exactly the assumed eye position.
+         */
+        public float windowStretch = 0f;
     }
 
     /** Output for one frame. */
@@ -99,13 +104,15 @@ public final class FoldEffect {
      * a point is a homography, so the four page corners pin it down exactly. Toward fully open the
      * result eases to flat so the effect can end without a jump.
      */
-    public static float[] windowCorners(float hingeX, float h, float angleDeg, float distPx, float eyeOffset, float amount) {
+    public static float[] windowCorners(float hingeX, float h, float angleDeg, float distPx, float eyeOffset,
+                                        float stretch, float amount) {
         float u = hingeX, ye = h / 2f, e = eyeOffset * hingeX;
         // Past perpendicular the panel faces away from the viewer and the projection degenerates;
         // hold it at the perpendicular view (by then the page is mostly blur and shade anyway).
         double f = Math.toRadians(Math.max(0f, Math.min(88f, 180f - angleDeg)));
         float t = (float) (1 - u * Math.sin(f) / distPx);
         float x = (float) ((u * Math.cos(f) + e) / t - e);
+        x = u + (x - u) * clamp01(stretch);
         float k = clamp01(amount);
         // Flat-screen points seen at the panel's outer corners, eased toward the flat page.
         float outerX = hingeX - (u + (x - u) * k);
