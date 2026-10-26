@@ -51,8 +51,14 @@ public final class FoldEffect {
         public float blurVertical = 1f;
         /** Fraction of the left page, ending at the hinge, over which the blur fades out (1 = the whole page). */
         public float blurFade = 1f;
-        /** Inner panel: full blur at or below this hinge angle, fading to none at fully open. */
-        public float fullBlurAngle = 90f;
+        /** Held still at or above this hinge angle for holdClearMs, the blur clears. */
+        public float holdClearAngle = 90f;
+        public int holdClearMs = 500;
+        /**
+         * 0..1 blur envelope set by the service each frame: on while the hinge moves, off once it
+         * has been held still above holdClearAngle. The blur follows movement, not the angle.
+         */
+        public float blurGate = 1f;
     }
 
     /** Output for one frame. */
@@ -76,11 +82,13 @@ public final class FoldEffect {
         return t * t * (3f - 2f * t);
     }
 
-    /** Inner panel blur by hinge angle alone: 1 up to fullBlurAngle, 0 at fully open. */
+    /** Degrees before fully open over which the inner blur lands, so it never cuts off in a jump. */
+    public static final float END_FADE = 15f;
+
+    /** Inner panel blur: the movement envelope, landing to none over the last END_FADE before open. */
     public static float blurAmount(float angle, Config c) {
         if (Float.isNaN(angle)) return 0f;
-        float full = Math.min(c.fullBlurAngle, c.open - 1f);
-        return clamp01((c.open - angle) / (c.open - full));
+        return clamp01(c.blurGate) * clamp01((c.open - angle) / END_FADE);
     }
 
     /** 0 = no effect, 1 = full effect (at the panel switch). */
@@ -99,7 +107,7 @@ public final class FoldEffect {
         float p = strength(cover, angle, c);
         strength = p;
         this.angle = angle;
-        blurPx = c.maxBlurPx * (float) Math.pow(cover ? p : blurAmount(angle, c), c.blurCurve);
+        blurPx = c.maxBlurPx * (float) Math.pow(cover ? p * clamp01(c.blurGate) : blurAmount(angle, c), c.blurCurve);
         shadowAlpha = clamp01(c.shadow * p);
         shadowWidth = 0.15f + 0.85f * p;
         sheenAlpha = 0.15f * c.glass * (float) Math.sin(Math.PI * p);

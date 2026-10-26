@@ -69,6 +69,16 @@ public class FoldService extends AccessibilityService implements SensorEventList
     private volatile float rawAngle = Float.NaN, velocity;
     private volatile long sampleNs;
     private volatile int events;
+    /**
+     * Last time the hinge moved at least MOVE_DEG from where it last settled. The sensor only
+     * reports changes, so this (not velocity, which goes stale) says whether it is moving.
+     */
+    private volatile long lastMoveNs;
+    private float moveAnchor = Float.NaN;
+    private static final float MOVE_DEG = 1.5f;
+    /** Blur movement envelope: off until the hinge moves, then eased in and out over these times. */
+    private float blurGate, blurGateTarget;
+    private static final float GATE_IN_MS = 60f, GATE_OUT_MS = 150f;
     /** Predict at most this far past the last sample; older samples mean the hinge has stopped. */
     private static final long MAX_PREDICT_NS = 40_000_000L;
     /** Longest gap between frames in the last second, for the readout (stutter shows up here). */
@@ -194,6 +204,8 @@ public class FoldService extends AccessibilityService implements SensorEventList
         if (cover || (!Float.isNaN(shownAngle) && shownAngle >= config.open)) openingStart = Float.NaN;
         config.innerSwitch = Float.isNaN(previewAngle) && !Float.isNaN(openingStart)
                 ? openingStart : prefs.getFloat(Prefs.CLOSE_SWITCH, Prefs.DEFAULT_SWITCH);
+        updateBlurGate(dtMs, cover);
+        config.blurGate = blurGate;
         view.fx.compute(cover, enabled ? shownAngle : Float.NaN, config);
         view.config = config;
         if (view.fx.strength > 0f && nowNs - lastLogNs > 100_000_000L) {
@@ -216,9 +228,10 @@ public class FoldService extends AccessibilityService implements SensorEventList
         if (!capturing) dropPage();
 
         if (view.hud) {
-            view.hudText = String.format("angle %.1f (shown %.1f)  %.0f°/s%nslowest frame %.0f ms (8 = smooth 120 Hz)%npanel %s  strength %.2f%nblur %dpx%s%nswitch close %.1f / open %.1f%n%s",
+            view.hudText = String.format("angle %.1f (shown %.1f)  %.0f°/s%nslowest frame %.0f ms (8 = smooth 120 Hz)%npanel %s  strength %.2f%nblur %dpx%s%s%nswitch close %.1f / open %.1f%n%s",
                     rawAngle, shownAngle, velocity, worstFrameShownMs, cover ? "COVER" : "INNER", view.fx.strength,
                     Math.round(view.fx.blurPx), blurSupported ? "" : " (blur unsupported)",
+                    blurGateTarget > 0f ? "  moving" : "  held",
                     prefs.getFloat(Prefs.CLOSE_SWITCH, Float.NaN), prefs.getFloat(Prefs.OPEN_SWITCH, Float.NaN),
                     capture == null ? "" : capture.status);
         }
@@ -230,7 +243,26 @@ public class FoldService extends AccessibilityService implements SensorEventList
         applyBlur(windowBlur, cover, view.rotation);
         view.render();
 
-        if (shownAngle != target || view.fx.strength > 0f || view.hud) kick();
+        if (shownAngle != target || view.fx.strength > 0f || blurGate != blurGateTarget || view.hud) kick();
+    }
+
+    /**
+     * The blur comes on when the hinge starts moving, either way, and stays while it moves. Held
+     * still above holdClearAngle for holdClearMs (opened part way and left there) it clears; held
+     * still below that it stays, until the next movement. On the cover screen it clears whenever
+     * the hinge is held still.
+     */
+    private void updateBlurGate(float dtMs, boolean cover) {
+        if (!Float.isNaN(previewAngle)) {
+            blurGate = blurGateTarget = 1f;
+            return;
+        }
+        long stillMs = (SystemClock.elapsedRealtimeNanos() - lastMoveNs) / 1_000_000L;
+        if (stillMs < config.holdClearMs) blurGateTarget = 1f;
+        else if (cover || Float.isNaN(shownAngle) || shownAngle >= config.holdClearAngle) blurGateTarget = 0f;
+        float tau = blurGateTarget > blurGate ? GATE_IN_MS : GATE_OUT_MS;
+        blurGate += (blurGateTarget - blurGate) * (1f - (float) Math.exp(-dtMs / tau));
+        if (Math.abs(blurGateTarget - blurGate) < 0.01f) blurGate = blurGateTarget;
     }
 
     /** Main thread: the last hinge sample, moved forward by its velocity to the present. */
@@ -324,6 +356,11 @@ public class FoldService extends AccessibilityService implements SensorEventList
             velocity = velocity * 0.5f + instant * 0.5f;
         } else {
             velocity = 0f;
+        }
+        if (Float.isNaN(moveAnchor)) moveAnchor = angle;
+        else if (Math.abs(angle - moveAnchor) >= MOVE_DEG) {
+            moveAnchor = angle;
+            lastMoveNs = e.timestamp;
         }
         sampleNs = e.timestamp;
         rawAngle = angle;

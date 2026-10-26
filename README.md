@@ -76,7 +76,7 @@ right from exactly the assumed eye position.
 | Edge softness | 40 px | Feathers the page edge into the black around it; the hinge side stays crisp |
 | Blur past the hinge | 0% | Carries the blur this far into the right half (% of screen width), so there's no line at the fold |
 | Left page shade | 0% | Darkens the left page, most at its outer edge |
-| Full blur up to | 90° | Inner screen blur is at full strength up to this hinge angle, then fades to none at fully open |
+| Clear blur when held still above / Held still for | 90° / 500 ms | The blur only comes on while the hinge is moving (either way). Stop above this angle and it clears after this long; move again and it comes back. It still lands to none at fully open |
 | Blur fade shape / Shade build-up | 150% / 100% | Lower stays heavy longer; higher fades sooner |
 | Vertical blur | 100% | Lower smears the blur sideways, away from the hinge |
 | Window projection | off | Left page as a window onto the flat screen (replaces the trapezoid) |
