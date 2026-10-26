@@ -49,6 +49,8 @@ public final class FoldEffect {
         public float blurCurve = 1.5f, shadeCurve = 1f;
         /** Vertical blur as a fraction of the horizontal: below 1 smears the page sideways. */
         public float blurVertical = 1f;
+        /** Fraction of the left page, ending at the hinge, over which the blur fades out (1 = the whole page). */
+        public float blurFade = 1f;
     }
 
     /** Output for one frame. */

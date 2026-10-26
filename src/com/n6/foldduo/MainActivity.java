@@ -106,7 +106,8 @@ public class MainActivity extends Activity {
         heading("Effect");
         check("Animation enabled", Prefs.ENABLED, true);
         check("Also animate the outer (cover) screen", Prefs.COVER_EFFECT, false);
-        slider("Blur", Prefs.BLUR, 0, 150, 60, "px");
+        slider("Blur", Prefs.BLUR, 0, 300, 60, "px");
+        slider("Blur fade width (from the hinge)", Prefs.BLUR_FADE, 5, 100, 100, "% of page");
         slider("Blur build-up (lower = heavy sooner)", Prefs.BLUR_CURVE, 20, 300, 150, "%");
         slider("Vertical blur (lower = sideways smear)", Prefs.BLUR_VERTICAL, 5, 100, 100, "%");
         slider("Shade build-up (higher = only near the switch)", Prefs.SHADE_CURVE, 20, 300, 100, "%");

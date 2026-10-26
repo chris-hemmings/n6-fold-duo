@@ -81,7 +81,8 @@ right from exactly the assumed eye position.
 | Window projection | off | Left page as a window onto the flat screen (replaces the trapezoid) |
 | Viewing distance | 35 cm | Closer makes the projection stronger |
 | Sideways stretch / Eye position | 0% / 50% | Optional sideways part of the projection, and where it assumes your eye is |
-| Blur | 60 px | Maximum blur, strongest at the outer edge |
+| Blur | 60 px | Maximum blur (up to 300 px), strongest at the outer edge |
+| Blur fade width | 100% | How much of the page, ending at the hinge, the blur fades out over; lower keeps it fully blurred closer to the hinge |
 | Blur only the left half | on | Used when Shizuku isn't connected |
 | Hinge shadow / Glass sheen | 60% / 100% | Shading along the hinge, and a moving highlight |
 | Motion smoothing | 20 ms | Lower is snappier, higher is smoother |

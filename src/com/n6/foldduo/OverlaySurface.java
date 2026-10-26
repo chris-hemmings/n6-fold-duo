@@ -65,7 +65,7 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
     private int recordedSteps = -1;
     private float recordedBlur = -1f;
     private boolean recordedDecal;
-    private float recordedVertical = -1f;
+    private float recordedVertical = -1f, recordedFade = -1f;
 
     OverlaySurface(Context c) {
         super(c);
@@ -225,7 +225,8 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
      */
     private void recordPage() {
         int bw = page.getWidth(), bh = page.getHeight(), steps = rotationSteps(rotation);
-        if (page != recordedPage || cover != recordedCover || steps != recordedSteps) {
+        if (page != recordedPage || cover != recordedCover || steps != recordedSteps
+                || config.blurFade != recordedFade) {
             blurNode.setPosition(0, 0, bw, bh);
             Canvas b = blurNode.beginRecording(bw, bh);
             b.drawBitmap(page, 0, 0, bitmapPaint);
@@ -235,7 +236,7 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
             Canvas f = fadedBlurNode.beginRecording(bw, bh);
             int layer = f.saveLayer(0, 0, bw, bh, null);
             f.drawRenderNode(blurNode);
-            maskPaint.setShader(hingeFade(steps, bw, bh));
+            maskPaint.setShader(hingeFade(steps, bw, bh, config.blurFade));
             maskPaint.setBlendMode(BlendMode.DST_IN);
             f.drawRect(0, 0, bw, bh, maskPaint);
             f.restoreToCount(layer);
@@ -253,6 +254,7 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
             recordedPage = page;
             recordedCover = cover;
             recordedSteps = steps;
+            recordedFade = config.blurFade;
             recordedBlur = -1f;
         }
         float blur = Math.max(0f, fx.blurPx) * bw / (float) Math.max(1, pageCrop.width());
@@ -279,7 +281,7 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
      * clear at the hinge. Which capture edge is the hinge depends on the display rotation (the
      * capture is the moving page, see captureRegion).
      */
-    private static Shader hingeFade(int steps, int bw, int bh) {
+    private static Shader hingeFade(int steps, int bw, int bh, float fadeWidth) {
         float ox, oy, hx, hy; // outer edge point -> hinge edge point
         switch (steps) {
             case 1: ox = 0; oy = bh; hx = 0; hy = 0; break;    // page is the bottom half, hinge on top
@@ -287,9 +289,12 @@ final class OverlaySurface extends SurfaceView implements SurfaceHolder.Callback
             case 3: ox = 0; oy = 0; hx = 0; hy = bh; break;    // page is the top half, hinge below
             default: ox = 0; oy = 0; hx = bw; hy = 0; break;   // page is the left half, hinge on its right
         }
+        // Fully blurred from the outer edge until the last fadeWidth of the capture, then easing out
+        // to none at its hinge-side end.
+        float start = 1f - FoldEffect.clamp01(fadeWidth);
         return new LinearGradient(ox, oy, hx, hy,
-                new int[]{Color.BLACK, Color.argb(110, 0, 0, 0), Color.TRANSPARENT},
-                new float[]{0f, 0.5f, 1f}, Shader.TileMode.CLAMP);
+                new int[]{Color.BLACK, Color.BLACK, Color.argb(110, 0, 0, 0), Color.TRANSPARENT},
+                new float[]{0f, start, start + (1f - start) * 0.5f, 1f}, Shader.TileMode.CLAMP);
     }
 
     /** Draw the recorded page back over the screen region it was captured from. */
