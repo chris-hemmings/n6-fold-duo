@@ -76,7 +76,7 @@ right from exactly the assumed eye position.
 | Edge softness | 40 px | Feathers the page edge into the black around it; the hinge side stays crisp |
 | Blur past the hinge | 0% | Carries the blur this far into the right half (% of screen width), so there's no line at the fold |
 | Left page shade | 0% | Darkens the left page, most at its outer edge |
-| Opening: clear blur when held still above / Held still for | 90° / 500 ms | The blur only comes on while the hinge is moving (either way). Stop for this long and it fades out: at any angle after closing part way, and at or above this angle after opening. It still lands to none at fully open |
+| Unfolding: clear blur when held still above / Held still for | 150° / 500 ms | The blur comes on while the hinge is moving (either way). It only clears when you unfold to near fully open (this angle or more) and hold it there this long; stopped mid-way or while closing, it stays. It still lands to none at fully open |
 | Blur fade-out when held | 400 ms | How long that fade-out takes |
 | Movement to bring the blur back | 6° | Once cleared, the hinge has to move this far before the blur returns, so a small nudge doesn't bring it back |
 | Blur fade shape / Shade build-up | 150% / 100% | Lower stays heavy longer; higher fades sooner |

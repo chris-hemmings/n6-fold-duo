@@ -252,8 +252,8 @@ public class FoldService extends AccessibilityService implements SensorEventList
 
     /**
      * The blur comes on when the hinge starts moving, either way, and stays while it moves. Held
-     * still for holdClearMs it fades out over blurFadeOutMs: always after closing part way (and on
-     * the cover screen), and after opening only at or above holdClearAngle. Once off, it only comes
+     * still for holdClearMs it fades out over blurFadeOutMs, but only after unfolding to near fully
+     * open (holdClearAngle or more): stopped mid-way, or while closing, it stays. Once off, it only comes
      * back after the hinge moves rearmDeg from where it settled, so a nudge doesn't bring it back.
      */
     private void updateBlurGate(float dtMs, boolean cover) {
@@ -268,8 +268,7 @@ public class FoldService extends AccessibilityService implements SensorEventList
                 blurGateTarget = 1f;
                 rearmFrom = Float.NaN;
             }
-        } else if (!moving && (cover || Float.isNaN(shownAngle) || lastMoveDir < 0
-                || shownAngle >= config.holdClearAngle)) {
+        } else if (!moving && !cover && lastMoveDir > 0 && shownAngle >= config.holdClearAngle) {
             blurGateTarget = 0f;
             rearmFrom = shownAngle;
         }

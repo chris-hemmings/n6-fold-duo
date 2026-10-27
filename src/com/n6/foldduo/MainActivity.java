@@ -108,7 +108,7 @@ public class MainActivity extends Activity {
         check("Also animate the outer (cover) screen", Prefs.COVER_EFFECT, false);
         slider("Blur", Prefs.BLUR, 0, 300, 60, "px");
         slider("Blur fade width (from the hinge)", Prefs.BLUR_FADE, 5, 100, 100, "% of page");
-        slider("Opening: clear blur when held still above", Prefs.HOLD_CLEAR_ANGLE, 20, 170, 90, "°");
+        slider("Unfolding: clear blur when held still above", Prefs.HOLD_CLEAR_ANGLE, 90, 171, 150, "°");
         slider("Held still for", Prefs.HOLD_CLEAR_MS, 100, 2000, 500, " ms");
         slider("Blur fade-out when held", Prefs.BLUR_FADE_OUT_MS, 50, 1500, 400, " ms");
         slider("Movement to bring the blur back", Prefs.REARM_DEG, 2, 30, 6, "°");
